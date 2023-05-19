@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id     Int     @id @default(autoincrement())
+  email  String  @unique
+  orders Order[]
+}
+
+model Order {
+  id                       Int    @id @default(autoincrement())
+  trackingNumber           Int?
+  courier                  String
+  street                   String
+  zip_code                 String
+  city                     String
+  destination_country_iso3 String // 3 letter country code
+  email                    String
+  articleNo                Int
+  articleImageUrl          String
+  quantity                 Int
+  product_name             String
+
+  customerId Int
+  customer   User @relation(fields: [customerId], references: [id])
+
+  checkPoints CheckPoint[]
+}
+
+model CheckPoint {
+  id            Int      @id @default(autoincrement())
+  // tracking_number Int <- this is already on the Order so we shouldn't need it here
+  location      String
+  timestamp     DateTime
+  status        String
+  status_text   String
+  status_detail String
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+}
