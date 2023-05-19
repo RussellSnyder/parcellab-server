@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Order" ALTER COLUMN "articleNo" DROP NOT NULL,
+ALTER COLUMN "articleImageUrl" DROP NOT NULL,
+ALTER COLUMN "quantity" DROP NOT NULL,
+ALTER COLUMN "product_name" DROP NOT NULL;

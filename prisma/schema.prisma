@@ -10,41 +10,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id     Int     @id @default(autoincrement())
-  email  String  @unique
-  orders Order[]
+enum Status {
+  OrderProcessed
+  PickUpPlanned
+  Upgrade
+  InboundScan
+  DestinationDeliveryCenter
+  Scheduled
 }
 
-model Order {
-  id                       Int    @id @default(autoincrement())
-  trackingNumber           Int?
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  trackings Tracking[]
+}
+
+model Tracking {
+  id                       Int     @id @default(autoincrement())
+  tracking_number          String
+  order_number             String
   courier                  String
   street                   String
   zip_code                 String
   city                     String
   destination_country_iso3 String // 3 letter country code
   email                    String
-  articleNo                Int
-  articleImageUrl          String
-  quantity                 Int
-  product_name             String
+  articleNo                String?
+  articleImageUrl          String?
+  quantity                 Int?
+  product_name             String?
 
   customerId Int
   customer   User @relation(fields: [customerId], references: [id])
 
-  checkPoints CheckPoint[]
+  checkpoints            Checkpoint[]
+  checkpointsOnTrackings CheckpointsOnTrackings[]
 }
 
-model CheckPoint {
-  id            Int      @id @default(autoincrement())
-  // tracking_number Int <- this is already on the Order so we shouldn't need it here
-  location      String
-  timestamp     DateTime
-  status        String
-  status_text   String
-  status_detail String
+model Checkpoint {
+  id             Int      @id @default(autoincrement())
+  location       String
+  timestamp      DateTime
+  status         Status
+  status_text    String
+  status_details String
 
-  orderId Int
-  order   Order @relation(fields: [orderId], references: [id])
+  tracking_number String
+
+  tracking               Tracking?                @relation(fields: [trackingId], references: [id])
+  trackingId             Int?
+  checkpointsOnTrackings CheckpointsOnTrackings[]
+}
+
+model CheckpointsOnTrackings {
+  tracking     Tracking   @relation(fields: [trackingId], references: [id])
+  trackingId   Int // relation scalar field (used in the `@relation` attribute above)
+  checkpoint   Checkpoint @relation(fields: [checkpointId], references: [id])
+  checkpointId Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([trackingId, checkpointId])
 }
