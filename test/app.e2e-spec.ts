@@ -8,12 +8,12 @@ import * as request from 'supertest';
 
 const BASE_URL = 'http://localhost:3333/';
 
-const checkpointsWithTrackings = Prisma.validator<Prisma.CheckpointArgs>()({
-  include: { tracking: true },
+const checkpointsWithOrders = Prisma.validator<Prisma.CheckpointArgs>()({
+  include: { order: true },
 });
 
 type CheckpointWithTrackings = Prisma.CheckpointGetPayload<
-  typeof checkpointsWithTrackings
+  typeof checkpointsWithOrders
 >;
 
 describe('App e2e', () => {
@@ -21,7 +21,7 @@ describe('App e2e', () => {
   let prisma: PrismaService;
   let seederService: SeederService;
   let validJWT: string;
-  let trackingId: number;
+  let orderId: number;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -50,10 +50,10 @@ describe('App e2e', () => {
 
   describe('Initial Databse Seeding', () => {
     describe('seederService', () => {
-      const userWithTrackings = Prisma.validator<Prisma.UserArgs>()({
-        include: { trackings: true },
+      const userWithOrders = Prisma.validator<Prisma.UserArgs>()({
+        include: { orders: true },
       });
-      let user: Prisma.UserGetPayload<typeof userWithTrackings>;
+      let user: Prisma.UserGetPayload<typeof userWithOrders>;
 
       let checkpoints: CheckpointWithTrackings[];
 
@@ -64,31 +64,31 @@ describe('App e2e', () => {
       it('should add at least one user to the database', async () => {
         user = await prisma.user.findFirst({
           include: {
-            trackings: true,
+            orders: true,
           },
         });
 
         expect(user).toBeDefined();
       });
 
-      it('should add trackings to the database', async () => {
-        const trackings = await prisma.tracking.findMany();
+      it('should add orders to the database', async () => {
+        const orders = await prisma.order.findMany();
 
-        expect(trackings.length).toBeGreaterThanOrEqual(3);
+        expect(orders.length).toBeGreaterThanOrEqual(3);
       });
 
       it('should add checkpoints to the database', async () => {
         checkpoints = await prisma.checkpoint.findMany({
           include: {
-            tracking: true,
+            order: true,
           },
         });
 
         expect(checkpoints.length).toBeGreaterThanOrEqual(3);
       });
 
-      it('should associate a user with thier respective trackings', async () => {
-        expect(user.trackings.length).toBeGreaterThanOrEqual(3);
+      it('should associate a user with thier respective orders', async () => {
+        expect(user.orders.length).toBeGreaterThanOrEqual(3);
       });
     });
   });
@@ -117,41 +117,41 @@ describe('App e2e', () => {
       });
     });
   });
-  describe('Tracking Controller', () => {
-    describe('Get /tracking', () => {
+  describe('Order Controller', () => {
+    describe('Get /orders', () => {
       it('should return 401 if no JWT is present', async () => {
-        const response = await request(BASE_URL).get('tracking').set({
+        const response = await request(BASE_URL).get('orders').set({
           Accept: 'application/json',
         });
 
         expect(response.statusCode).toBe(401);
       });
 
-      it('should return the tracking information of a user with a valid JWT', async () => {
+      it('should return the order information of a user with a valid JWT', async () => {
         const response = await request(BASE_URL)
-          .get('tracking')
+          .get('orders')
           .set({
             'Content-Type': 'application/json',
             Authorization: `Bearer ${validJWT}`,
           });
 
         expect(response.status).toBe(200);
-        expect(response.body.trackings.length).toBeGreaterThanOrEqual(1);
-        trackingId = response.body.trackings[0].id;
+        expect(response.body.orders.length).toBeGreaterThanOrEqual(1);
+        orderId = response.body.orders[0].id;
       });
     });
-    describe('Get /tracking/:id', () => {
+    describe('Get /orders/:id', () => {
       it('should return 401 if no JWT is present', async () => {
-        const response = await request(BASE_URL).get('tracking').set({
+        const response = await request(BASE_URL).get('orders').set({
           Accept: 'application/json',
         });
 
         expect(response.statusCode).toBe(401);
       });
 
-      it('should return the tracking information with most recent checkpoint', async () => {
+      it('should return the order information with checkpoints', async () => {
         const response = await request(BASE_URL)
-          .get(`tracking/${trackingId}`)
+          .get(`orders/${orderId}`)
           .set({
             'Content-Type': 'application/json',
             Authorization: `Bearer ${validJWT}`,
@@ -159,7 +159,7 @@ describe('App e2e', () => {
 
         expect(response.status).toBe(200);
         console.log(response.body);
-        expect(response.body.status).toBeDefined();
+        expect(response.body.checkpoints.length).toBeGreaterThan(1);
       });
     });
   });

@@ -11,13 +11,11 @@ async function loadAndParseCsvFile<T>(fileLocation: string): Promise<T[]> {
   // Parse CSV
   const parsedFile = parse(rawCsv, { delimiter: ';' });
 
-  const trackingColumns = parsedFile[0];
-  const trackingDataArray = parsedFile.slice(1);
+  const columns = parsedFile[0];
+  const data = parsedFile.slice(1);
 
   // return array of key/value objects
-  return trackingDataArray.map((trackingData) =>
-    zipObject(trackingColumns, trackingData),
-  );
+  return data.map((trackingData) => zipObject(columns, trackingData));
 }
 
 export interface CheckpointFromCsv {

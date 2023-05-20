@@ -5,12 +5,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { SeederModule } from './seeder/seeder.module';
-import { TrackingController } from './tracking/tracking.controller';
-import { TrackingService } from './tracking/tracking.service';
+import { OrderController } from './order/order.controller';
+import { OrderService } from './order/order.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
-import { TrackingModule } from './tracking/tracking.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -25,9 +25,9 @@ import { TrackingModule } from './tracking/tracking.module';
       signOptions: { expiresIn: '24h' },
     }),
     AuthModule,
-    TrackingModule,
+    OrderModule,
   ],
-  controllers: [AppController, TrackingController, AuthController],
-  providers: [AppService, TrackingService, AuthService],
+  controllers: [AppController, OrderController, AuthController],
+  providers: [AppService, OrderService, AuthService],
 })
 export class AppModule {}
