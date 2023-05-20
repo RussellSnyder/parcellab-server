@@ -4,6 +4,9 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { SeederService } from '../src/seeder/seeder.service';
 import { Prisma } from '@prisma/client';
+import * as request from 'supertest';
+
+const BASE_URL = 'http://localhost:3333/';
 
 const checkpointsWithTrackings = Prisma.validator<Prisma.CheckpointArgs>()({
   include: { tracking: true },
@@ -37,7 +40,6 @@ describe('App e2e', () => {
     seederService = app.get(SeederService);
 
     await prisma.cleanDb();
-    // pactum.request.setBaseUrl('http://localhost:3333');
   });
 
   afterAll(() => {
@@ -85,6 +87,48 @@ describe('App e2e', () => {
 
       it('should associate a user with thier respective trackings', async () => {
         expect(user.trackings.length).toBeGreaterThanOrEqual(3);
+      });
+    });
+  });
+  describe('Auth Controller', () => {
+    describe('signin', () => {
+      it('should not log in an unknown email address', async () => {
+        const response = await request(BASE_URL)
+          .post('auth/signin')
+          .send({ email: 'yolo@yolo.com' })
+          .set('Accept', 'application/json');
+
+        expect(response.status).toBe(403);
+      });
+
+      it('should log a known email address', async () => {
+        const response = await request(BASE_URL)
+          .post('auth/signin')
+          .send({ email: 'julian@parcellab.com' })
+          .set('Accept', 'application/json');
+
+        expect(response.statusCode).toBe(200);
+      });
+    });
+    describe('User Controller', () => {
+      describe('Get /me', () => {
+        it('should return the information of a user with a valid JWT', async () => {
+          const response = await request(BASE_URL)
+            .post('me')
+            .send({ email: 'yolo@yolo.com' })
+            .set('Accept', 'application/json');
+
+          expect(response.status).toBe(200);
+        });
+
+        it('should return 404 if no JWT is present', async () => {
+          const response = await request(BASE_URL)
+            .post('/login')
+            .send({ email: 'julian@parcellab.com' })
+            .set('Accept', 'application/json');
+
+          expect(response.statusCode).toBe(404);
+        });
       });
     });
   });
