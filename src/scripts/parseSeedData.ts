@@ -1,10 +1,11 @@
+import { Status } from '@prisma/client';
 import { parse } from 'csv-parse/sync';
 import { promises as fs } from 'fs';
 import { zipObject } from 'lodash';
 
-const SEED_DATA_DIR = __dirname + '/../seedData/';
+const SEED_DATA_DIR = __dirname + '/../../seedData/';
 
-async function parseCsvFile<T>(fileLocation: string): Promise<T[]> {
+async function loadAndParseCsvFile<T>(fileLocation: string): Promise<T[]> {
   // Read File
   const rawCsv = await fs.readFile(fileLocation, 'utf-8');
   // Parse CSV
@@ -19,14 +20,43 @@ async function parseCsvFile<T>(fileLocation: string): Promise<T[]> {
   );
 }
 
-export const parseSeedData = async () => {
+export interface CheckpointFromCsv {
+  tracking_number: string;
+  location: string;
+  timestamp: string;
+  status: Status;
+  status_text: string;
+  status_details: string;
+}
+
+export interface TrackingFromCsv {
+  orderNo: string;
+  tracking_number: string;
+  courier: string;
+  street: string;
+  zip_code: string;
+  city: string;
+  destination_country_iso3: string;
+  email: string;
+  articleNo: string;
+  articleImageUrl: string;
+  quantity: string;
+  product_name: string;
+}
+
+export interface SeedData {
+  trackings: TrackingFromCsv[];
+  checkpoints: CheckpointFromCsv[];
+}
+
+export const loadSeedData = async (): Promise<SeedData> => {
   const seedDataFiles = await fs.readdir(SEED_DATA_DIR);
 
   const promises = [];
 
   seedDataFiles.forEach((filename) => {
     const csvFileToParse = `${SEED_DATA_DIR}${filename}`;
-    promises.push(parseCsvFile(csvFileToParse));
+    promises.push(loadAndParseCsvFile(csvFileToParse));
   });
 
   const parsedCsvFiles = await Promise.all(promises);
@@ -36,6 +66,4 @@ export const parseSeedData = async () => {
   const data = zipObject(seedDataFileNames, parsedCsvFiles);
 
   return data;
-
-  // Maybe process to help match our DB schema
 };
