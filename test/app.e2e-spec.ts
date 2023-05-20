@@ -20,6 +20,8 @@ describe('App e2e', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let seederService: SeederService;
+  let validJWT: string;
+  let trackingId: number;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -92,7 +94,7 @@ describe('App e2e', () => {
   });
   describe('Auth Controller', () => {
     describe('signin', () => {
-      it('should not log in an unknown email address', async () => {
+      it('should not signin an unknown email address', async () => {
         const response = await request(BASE_URL)
           .post('auth/signin')
           .send({ email: 'yolo@yolo.com' })
@@ -101,34 +103,63 @@ describe('App e2e', () => {
         expect(response.status).toBe(403);
       });
 
-      it('should log a known email address', async () => {
+      it('should signin a known email address', async () => {
         const response = await request(BASE_URL)
           .post('auth/signin')
           .send({ email: 'julian@parcellab.com' })
           .set('Accept', 'application/json');
 
+        expect(response.body).toHaveProperty('access_token');
+
+        validJWT = response.body.access_token;
+
         expect(response.statusCode).toBe(200);
       });
     });
-    describe('User Controller', () => {
-      describe('Get /me', () => {
-        it('should return the information of a user with a valid JWT', async () => {
-          const response = await request(BASE_URL)
-            .post('me')
-            .send({ email: 'yolo@yolo.com' })
-            .set('Accept', 'application/json');
-
-          expect(response.status).toBe(200);
+  });
+  describe('Tracking Controller', () => {
+    describe('Get /tracking', () => {
+      it('should return 401 if no JWT is present', async () => {
+        const response = await request(BASE_URL).get('tracking').set({
+          Accept: 'application/json',
         });
 
-        it('should return 404 if no JWT is present', async () => {
-          const response = await request(BASE_URL)
-            .post('/login')
-            .send({ email: 'julian@parcellab.com' })
-            .set('Accept', 'application/json');
+        expect(response.statusCode).toBe(401);
+      });
 
-          expect(response.statusCode).toBe(404);
+      it('should return the tracking information of a user with a valid JWT', async () => {
+        const response = await request(BASE_URL)
+          .get('tracking')
+          .set({
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${validJWT}`,
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.trackings.length).toBeGreaterThanOrEqual(1);
+        trackingId = response.body.trackings[0].id;
+      });
+    });
+    describe('Get /tracking/:id', () => {
+      it('should return 401 if no JWT is present', async () => {
+        const response = await request(BASE_URL).get('tracking').set({
+          Accept: 'application/json',
         });
+
+        expect(response.statusCode).toBe(401);
+      });
+
+      it('should return the tracking information with most recent checkpoint', async () => {
+        const response = await request(BASE_URL)
+          .get(`tracking/${trackingId}`)
+          .set({
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${validJWT}`,
+          });
+
+        expect(response.status).toBe(200);
+        console.log(response.body);
+        expect(response.body.status).toBeDefined();
       });
     });
   });

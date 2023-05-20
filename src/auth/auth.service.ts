@@ -13,7 +13,6 @@ export class AuthService {
   ) {}
 
   async signin(dto: SignInDto) {
-    console.log({ dto });
     // find the user by email
     const user = await this.prisma.user.findUnique({
       where: {
