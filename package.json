@@ -26,8 +26,8 @@
     "db:dev:up": "docker compose up dev-db -d",
     "db:dev:restart": "yarn db:dev:rm && yarn db:dev:up && sleep 1 && yarn prisma:dev:deploy",
     "db:dev:seed": "ts-node -r tsconfig-paths/register src/seed.ts",
-    "db:test:rm": "docker compose rm test-db -s -f -v",
-    "db:test:up": "docker compose up test-db -d",
+    "db:test:rm": "docker compose --env-file ./.env.test rm test-db -s -f -v",
+    "db:test:up": "docker compose --env-file ./.env.test up test-db -d",
     "db:test:restart": "yarn db:test:rm && yarn db:test:up && sleep 1 && yarn prisma:test:deploy"
   },
   "dependencies": {

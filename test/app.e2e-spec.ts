@@ -44,7 +44,7 @@ describe('App e2e', () => {
     app.close();
   });
 
-  describe('Seeding', () => {
+  describe('Initial Databse Seeding', () => {
     describe('seederService', () => {
       const userWithTrackings = Prisma.validator<Prisma.UserArgs>()({
         include: { trackings: true },
