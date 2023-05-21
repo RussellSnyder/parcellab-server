@@ -30,7 +30,8 @@
     "db:dev:init": "yarn db:dev:restart && yarn db:dev:seed",
     "db:test:rm": "docker compose --env-file ./.env.test rm test-db -s -f -v",
     "db:test:up": "docker compose --env-file ./.env.test up test-db -d",
-    "db:test:restart": "yarn db:test:rm && yarn db:test:up && sleep 1 && yarn prisma:test:deploy"
+    "db:test:restart": "yarn db:test:rm && yarn db:test:up && sleep 1 && yarn prisma:test:deploy",
+    "env:usesample": "mv .env.sample .env && mv .env.test.sample .env.test"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
