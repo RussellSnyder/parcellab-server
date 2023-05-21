@@ -119,25 +119,39 @@ describe('App e2e', () => {
   });
   describe('Order Controller', () => {
     describe('Get /orders', () => {
-      it('should return 401 if no JWT is present', async () => {
-        const response = await request(BASE_URL).get('orders').set({
-          Accept: 'application/json',
-        });
-
-        expect(response.statusCode).toBe(401);
-      });
-
-      it('should return the order information of a user with a valid JWT', async () => {
-        const response = await request(BASE_URL)
-          .get('orders')
-          .set({
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${validJWT}`,
+      describe('fail', () => {
+        it('should return 401 if no JWT is present', async () => {
+          const response = await request(BASE_URL).get('orders').set({
+            Accept: 'application/json',
           });
 
-        expect(response.status).toBe(200);
-        expect(response.body.orders.length).toBeGreaterThanOrEqual(1);
-        orderNumber = response.body.orders[0].order_number;
+          expect(response.statusCode).toBe(401);
+        });
+      });
+
+      describe('sucess', () => {
+        let response: request.Response;
+        beforeAll(async () => {
+          response = await request(BASE_URL)
+            .get('orders')
+            .set({
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${validJWT}`,
+            });
+        });
+        it('should return 200 if using a valid JWT', () => {
+          expect(response.status).toBe(200);
+        });
+        it('should return multiple orders', () => {
+          expect(response.body.length).toBeGreaterThanOrEqual(1);
+        });
+        it('should return orders with an order_number property', () => {
+          expect(response.body[0].order_number).toBeDefined();
+          orderNumber = response.body[0].order_number;
+        });
+        it('should return orders with articles attached', () => {
+          expect(response.body[0].articles).toBeDefined();
+        });
       });
     });
     describe('Get /orders/:id', () => {
@@ -158,7 +172,6 @@ describe('App e2e', () => {
           });
 
         expect(response.status).toBe(200);
-        console.log(response.body);
         expect(response.body.checkpoints.length).toBeGreaterThan(1);
       });
     });
