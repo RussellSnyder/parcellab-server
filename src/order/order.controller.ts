@@ -19,10 +19,8 @@ export class OrderController {
     return this.orderService.getOrdersForUser(userId);
   }
 
-  @Get('/:id')
-  getMostRecentCheckpointForTrackingsId(
-    @Param('id', ParseIntPipe) trackingId: number,
-  ) {
-    return this.orderService.getMostRecentCheckpointForOrderId(trackingId);
+  @Get(':id')
+  getOrderWithCheckpoints(@Param('id') orderNumber: string) {
+    return this.orderService.getOrderWithCheckpoints(orderNumber);
   }
 }

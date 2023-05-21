@@ -21,7 +21,7 @@ describe('App e2e', () => {
   let prisma: PrismaService;
   let seederService: SeederService;
   let validJWT: string;
-  let orderId: number;
+  let orderNumber: number;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -137,7 +137,7 @@ describe('App e2e', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.orders.length).toBeGreaterThanOrEqual(1);
-        orderId = response.body.orders[0].id;
+        orderNumber = response.body.orders[0].order_number;
       });
     });
     describe('Get /orders/:id', () => {
@@ -151,7 +151,7 @@ describe('App e2e', () => {
 
       it('should return the order information with checkpoints', async () => {
         const response = await request(BASE_URL)
-          .get(`orders/${orderId}`)
+          .get(`orders/${orderNumber}`)
           .set({
             'Content-Type': 'application/json',
             Authorization: `Bearer ${validJWT}`,

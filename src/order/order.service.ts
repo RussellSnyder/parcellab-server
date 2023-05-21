@@ -19,10 +19,10 @@ export class OrderService {
     return { orders: userWithOrders.orders };
   }
 
-  async getMostRecentCheckpointForOrderId(orderId: number) {
+  async getOrderWithCheckpoints(orderNumber: string) {
     // get the tracking info
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { order_number: orderNumber },
     });
 
     const checkpoints = await this.prisma.checkpoint.findMany({
