@@ -8,12 +8,12 @@ import * as request from 'supertest';
 
 const BASE_URL = 'http://localhost:3333/';
 
-const checkpointsWithOrders = Prisma.validator<Prisma.CheckpointArgs>()({
+const checkpointsWithOrder = Prisma.validator<Prisma.CheckpointArgs>()({
   include: { order: true },
 });
 
-type CheckpointWithTrackings = Prisma.CheckpointGetPayload<
-  typeof checkpointsWithOrders
+type CheckpointWithOrder = Prisma.CheckpointGetPayload<
+  typeof checkpointsWithOrder
 >;
 
 describe('App e2e', () => {
@@ -55,7 +55,7 @@ describe('App e2e', () => {
       });
       let user: Prisma.UserGetPayload<typeof userWithOrders>;
 
-      let checkpoints: CheckpointWithTrackings[];
+      let checkpoints: CheckpointWithOrder[];
 
       beforeAll(async () => {
         await seederService.seed();
@@ -74,7 +74,7 @@ describe('App e2e', () => {
       it('should add orders to the database', async () => {
         const orders = await prisma.order.findMany();
 
-        expect(orders.length).toBeGreaterThanOrEqual(3);
+        expect(orders.length).toBeGreaterThanOrEqual(2);
       });
 
       it('should add checkpoints to the database', async () => {
@@ -88,7 +88,7 @@ describe('App e2e', () => {
       });
 
       it('should associate a user with thier respective orders', async () => {
-        expect(user.orders.length).toBeGreaterThanOrEqual(3);
+        expect(user.orders.length).toBeGreaterThanOrEqual(2);
       });
     });
   });
@@ -143,14 +143,26 @@ describe('App e2e', () => {
           expect(response.status).toBe(200);
         });
         it('should return multiple orders', () => {
-          expect(response.body.length).toBeGreaterThanOrEqual(1);
+          const { orders } = response.body;
+          expect(orders.length).toBeGreaterThanOrEqual(2);
         });
+        it('orders should contain order items', () => {
+          const { orders } = response.body;
+          expect(orders[0].orderItems).toBeDefined();
+        });
+        it('order items should contain a quantity prroperty', () => {
+          const { orders } = response.body;
+          expect(orders[0].orderItems[0].quantity).toBeDefined();
+        });
+        it('order items should contain article information', () => {
+          const { orders } = response.body;
+          expect(orders[0].orderItems[0].article).toBeDefined();
+        });
+
         it('should return orders with an order_number property', () => {
-          expect(response.body[0].order_number).toBeDefined();
-          orderNumber = response.body[0].order_number;
-        });
-        it('should return orders with articles attached', () => {
-          expect(response.body[0].articles).toBeDefined();
+          const { orders } = response.body;
+          expect(orders[0].order_number).toBeDefined();
+          orderNumber = orders[0].order_number;
         });
       });
     });
@@ -172,7 +184,7 @@ describe('App e2e', () => {
           });
 
         expect(response.status).toBe(200);
-        expect(response.body.checkpoints.length).toBeGreaterThan(1);
+        expect(response.body.order.checkpoints.length).toBeGreaterThan(1);
       });
     });
   });

@@ -25,26 +25,40 @@ model User {
   orders Order[]
 }
 
+model Article {
+  id              Int         @id @default(autoincrement())
+  article_number  String      @unique
+  articleImageUrl String
+  product_name    String
+  orderItems      OrderItem[]
+}
+
+model OrderItem {
+  id       Int @id @default(autoincrement())
+  quantity Int
+
+  order_number   String
+  order          Order   @relation(fields: [order_number], references: [order_number])
+  article_number String
+  article        Article @relation(fields: [article_number], references: [article_number])
+}
+
 model Order {
-  id                       Int     @id @default(autoincrement())
+  id                       Int    @id @default(autoincrement())
   tracking_number          String
-  order_number             String
+  order_number             String @unique
   courier                  String
   street                   String
   zip_code                 String
   city                     String
   destination_country_iso3 String // 3 letter country code
   email                    String
-  articleNo                String?
-  articleImageUrl          String?
-  quantity                 Int?
-  product_name             String?
 
   customerId Int
   customer   User @relation(fields: [customerId], references: [id])
 
-  checkpoints         Checkpoint[]
-  checkpointsOnOrders CheckpointsOnOrders[]
+  checkpoints Checkpoint[]
+  orderItems  OrderItem[]
 }
 
 model Checkpoint {
@@ -57,16 +71,6 @@ model Checkpoint {
 
   tracking_number String
 
-  order               Order?                @relation(fields: [orderId], references: [id])
-  orderId             Int?
-  checkpointsOnOrders CheckpointsOnOrders[]
-}
-
-model CheckpointsOnOrders {
-  order        Order      @relation(fields: [orderId], references: [id])
-  orderId      Int // relation scalar field (used in the `@relation` attribute above)
-  checkpoint   Checkpoint @relation(fields: [checkpointId], references: [id])
-  checkpointId Int // relation scalar field (used in the `@relation` attribute above)
-
-  @@id([orderId, checkpointId])
+  order   Order? @relation(fields: [orderId], references: [id])
+  orderId Int?
 }

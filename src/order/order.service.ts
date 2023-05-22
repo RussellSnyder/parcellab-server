@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Order } from '@prisma/client';
-import { omit } from 'lodash';
-import { OrderArticle, OrderWithArticles } from './types';
 
 @Injectable()
 export class OrderService {
@@ -14,62 +11,43 @@ export class OrderService {
         id: userId,
       },
       include: {
-        orders: true,
+        orders: {
+          include: {
+            orderItems: {
+              include: {
+                article: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    return this.attachArticlesOnOrders(userWithOrders.orders);
+    return userWithOrders;
   }
 
   async getOrderWithCheckpoints(orderNumber: string) {
     // get the tracking info
-    const orders = await this.prisma.order.findMany({
+    const order = await this.prisma.order.findUnique({
       where: { order_number: orderNumber },
+      include: {
+        orderItems: {
+          include: {
+            article: true,
+          },
+        },
+      },
     });
-
-    const orderWithArticles = this.attachArticlesOnOrders(orders)[0];
 
     const checkpoints = await this.prisma.checkpoint.findMany({
       where: {
-        tracking_number: orderWithArticles.tracking_number,
+        tracking_number: order.tracking_number,
       },
       orderBy: {
         timestamp: 'desc',
       },
     });
 
-    return { order: orderWithArticles, checkpoints };
-  }
-
-  // if two orders have the same order_number, there are multiple articles for that order
-  attachArticlesOnOrders(orders: Order[]): OrderWithArticles[] {
-    const ordersWithArticles = orders.reduce((prev, curr) => {
-      let orderWithArticles: OrderWithArticles;
-      const currentOrderArticle: OrderArticle = {
-        articleNumber: curr.articleNo,
-        articleImageUrl: curr.articleImageUrl,
-        quantity: curr.quantity,
-        product_name: curr.product_name,
-      };
-
-      if (prev[curr.order_number]) {
-        orderWithArticles = {
-          ...prev[curr.order_number],
-          articles: [...prev[curr.order_number].articles, currentOrderArticle],
-        };
-      } else {
-        orderWithArticles = {
-          ...omit(curr, ['articleNo', 'articleImageUrl']),
-          articles: [currentOrderArticle],
-        };
-      }
-
-      return {
-        ...prev,
-        [curr.order_number]: orderWithArticles,
-      };
-    }, {});
-
-    return Object.values(ordersWithArticles);
+    return { order: { ...order, checkpoints } };
   }
 }
